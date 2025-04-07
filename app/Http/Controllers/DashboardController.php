@@ -2,25 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Barang;
-use App\Models\Gudang;
-use App\Models\JenisBarang;
-use App\Models\Satuan;
-use App\Models\User;
+use App\Services\BarangService;
+use App\Services\JenisBarangService;
+use App\Services\SatuanService;
+use App\Services\GudangService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    protected $barangService;
+    protected $jenisBarangService;
+    protected $satuanService;
+    protected $gudangService;
+
+    public function __construct(
+        BarangService $barangService,
+        JenisBarangService $jenisBarangService,
+        SatuanService $satuanService,
+        GudangService $gudangService
+    ) {
+        $this->barangService = $barangService;
+        $this->jenisBarangService = $jenisBarangService;
+        $this->satuanService = $satuanService;
+        $this->gudangService = $gudangService;
+    }
+
     public function index()
     {
+        try {
+            $counts = [
+                'barangs' => $this->barangService->getCount(),
+                'jenisbarangs' => $this->jenisBarangService->getCount(),
+                'satuans' => $this->satuanService->getCount(),
+                'gudangs' => $this->gudangService->getCount(),
+                // 'users' => $this->userService->getCount(), // Uncomment if needed
+            ];
 
-        $barangs = Barang::count();
-        $jenisbarangs = JenisBarang::count();
-        $satuans = Satuan::count();
-        $users = User::count();
-        $gudangs = Gudang::count();
-
-        return view('frontend.dashboard', compact('barangs', 'jenisbarangs', 'satuans', 'users', 'gudangs'));
+            return view('frontend.dashboard', $counts);
+        } catch (\Exception $e) {
+            return view('frontend.dashboard')->withErrors([
+                'message' => 'Failed to load dashboard data: ' . $e->getMessage()
+            ]);
+        }
     }
 }

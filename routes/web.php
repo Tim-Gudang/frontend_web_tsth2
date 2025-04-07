@@ -6,28 +6,37 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SatuanController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth.token')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login')->middleware('guest');
-    Route::post('/login', [AuthController::class, 'handleLogin'])->name('post.login')->middleware('guest');
+// Public routes (accessible without authentication)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login');
+    Route::post('/login', [AuthController::class, 'handleLogin'])->name('login.post');
 });
 
-Route::middleware('auth.session')->group(function () {
-    Route::post('/logout', [AuthController::class, 'handleLogout'])->name('auth.logout');
+// Authenticated routes
+Route::middleware(['auth:web'])->group(function () {
+
+    // Authentication routes
+    Route::post('/logout', [AuthController::class, 'handleLogout'])->name('logout');
+
+    // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Scan result
     Route::get('/scan-result', function () {
         $data = request()->query('data');
         return view('scan-result', compact('data'));
-    });
+    })->name('scan.result');
 
+    // User profile
     Route::get('/user_profile', function () {
         return view('profile.user_profile');
-    })->name('user_profile');
+    })->name('user.profile');
 
+    // Resource controllers
     Route::resource('barangs', BarangController::class);
     Route::resource('satuans', SatuanController::class);
 });
-
-Route::get('/error', function () {
+// Fallback route
+Route::fallback(function () {
     return view('error.error');
-})->name('error');
+})->name('fallback');

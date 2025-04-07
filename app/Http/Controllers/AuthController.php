@@ -2,70 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use GuzzleHttp\Exception\RequestException;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    private $apiBaseUrl;
+    protected $authService;
 
-    public function __construct()
+    public function __construct(AuthService $authService)
     {
-        $this->apiBaseUrl = config('api.base_url');
+        $this->authService = $authService;
     }
 
     public function showLoginForm()
     {
+        if ($this->authService->check()) {
+            return redirect()->route('dashboard');
+        }
         return view('auth.login');
     }
 
-    public function handleLogin(Request $request)
+    public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email'    => 'required|string|email',
-            'password' => 'required|string',
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string'
         ]);
 
         try {
-            $response = Http::post("{$this->apiBaseUrl}/auth/login", $credentials);
-            $data = $response->json();
+            $user = $this->authService->login($request->only('email', 'password'));
 
-            if ($response->successful() && isset($data['response_code']) && $data['response_code'] == 200) {
-                session([
-                    'token' => $data['data']['token'],
-                    'user' => $data['data']['user']
-                ]);
+            // Manually authenticate user in Laravel's web guard
+            Auth::loginUsingId($user['id']);
 
-                session()->flash('login_success', 'Login berhasil! Selamat datang, ' . $data['data']['user']['name']);
-                return redirect()->route('dashboard');
-            }
-
-            // Menampilkan error message dari API jika login gagal
-            return back()->withErrors(['login_error' => $data['message'] ?? 'Login gagal. Coba lagi.']);
-        } catch (RequestException $e) {
-            // Jika terjadi error saat menghubungi API
-            Log::error('Login API Error: ' . $e->getMessage());
-            return back()->withErrors(['login_error' => 'Terjadi kesalahan saat menghubungi server.']);
+            return redirect()->intended('dashboard')
+                ->with('success', 'Login berhasil');
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
         }
     }
 
-    public function handleLogout()
+    public function logout()
     {
-        $token = session('token');
+        try {
+            $this->authService->logout();
+            Auth::logout(); // Logout from web guard
 
-        if ($token) {
-            $response = Http::withToken($token)->post("{$this->apiBaseUrl}/auth/logout");
-
-            if ($response->successful()) {
-                Session::flush();
-                return redirect()->route('auth.login')->with('logout_success', 'Anda telah logout.');
-            }
+            return redirect()->route('login')
+                ->with('success', 'Logout berhasil');
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
         }
-
-        return redirect()->route('auth.login');
     }
 }
