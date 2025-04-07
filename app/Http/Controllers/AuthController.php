@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -17,6 +18,7 @@ class AuthController extends Controller
 
     public function showLoginForm()
     {
+        // Check using only one consistent authentication method
         if ($this->authService->check()) {
             return redirect()->route('dashboard');
         }
@@ -31,28 +33,43 @@ class AuthController extends Controller
         ]);
 
         try {
-            $user = $this->authService->login($request->only('email', 'password'));
+            $credentials = $request->only('email', 'password');
+            $response = $this->authService->login($credentials);
 
-            // Manually authenticate user in Laravel's web guard
-            Auth::loginUsingId($user['id']);
+            if (!$response['success']) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['message' => $response['message']]);
+            }
+
+            // Debug the session immediately after login
+            Log::info('Login successful - Token in session: ' . (session()->has('token') ? 'YES' : 'NO'));
+            Log::info('User data in session: ' . json_encode(session('user')));
 
             return redirect()->intended('dashboard')
-                ->with('success', 'Login berhasil');
+                ->with('success', $response['message'] ?? 'Login berhasil');
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+            Log::error('Login exception: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->withErrors(['message' => $e->getMessage()]);
         }
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        try {
-            $this->authService->logout();
-            Auth::logout(); // Logout from web guard
+        $response = $this->authService->logout();
 
-            return redirect()->route('login')
-                ->with('success', 'Logout berhasil');
-        } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+        // Ensure session is completely cleared
+        session()->forget(['user', 'token']);
+        session()->flush();
+
+        // If using Laravel's built-in auth as well
+        if (Auth::check()) {
+            Auth::logout();
         }
+
+        return redirect()->route('login')
+            ->with('success', 'Logout berhasil');
     }
 }

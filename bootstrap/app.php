@@ -16,6 +16,7 @@ use Illuminate\Foundation\Application;
             $middleware->alias([
                 'auth.token' => \App\Http\Middleware\Authenticated::class,
                 'auth.session' => \App\Http\Middleware\AuthSession::class,
+                'auth.api' => \App\Http\Middleware\AuthenticateWithApi::class,
             ]);
         })
         ->withExceptions(function (Exceptions $exceptions) {
