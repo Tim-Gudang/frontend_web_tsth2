@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Route;
 // Public routes (accessible without authentication)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login');
-    Route::post('/login', [AuthController::class, 'handleLogin'])->name('login.post');
+    Route::post('/login', [AuthController::class, 'Login'])->name('login.post');
 });
 
 // Authenticated routes
-Route::middleware(['auth:web'])->group(function () {
+Route::middleware(['auth.api'])->group(function () {
 
     // Authentication routes
-    Route::post('/logout', [AuthController::class, 'handleLogout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'Logout'])->name('logout');
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
