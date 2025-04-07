@@ -1,17 +1,20 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Data Barang</h4>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_form">
-                <i class="icon-database-add me-2"></i> Tambah Barang
-            </button>
-        </div>
+   <button type="button" class="btn btn-primary btn-labeled btn-labeled-start mb-2" data-bs-toggle="modal"
+            data-bs-target="#modal_centered">
+            <span class="btn-labeled-icon bg-black bg-opacity-20">
+                <i class="icon-database-add"></i>
+            </span> Tambah
+        </button>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover text-center align-middle">
-                <thead class="table-dark">
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Table barang</h5>
+            </div>
+            <table class="table datatable-button-html5-basic">
+                <thead>
                     <tr>
                         <th>No</th>
                         <th>Nama Barang</th>
@@ -38,7 +41,7 @@
 
                             <td>
                                 @php
-                                    $qrCodeBaseUrl = 'http://127.0.0.1:8000/storage/qr_code/';
+                                    $qrCodeBaseUrl = 'http://127.0.0.1:8090/storage/qr_code/';
                                     $qrCodeFormats = ['png', 'jpg', 'jpeg'];
                                     $qrCodeUrl = null;
                                     foreach ($qrCodeFormats as $format) {
@@ -57,26 +60,31 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <div class="btn-group">
-                                    <!-- Tombol Detail -->
-                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                <div class="d-inline-flex">
+                                    <!-- Show -->
+                                    <a href="#" class="text-info me-2" data-bs-toggle="modal"
                                         data-bs-target="#detailBarang{{ $barang['id'] }}" title="Detail">
                                         <i class="ph-eye"></i>
-                                    </button>
+                                    </a>
 
-                                    <!-- Tombol Edit -->
-                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    <!-- Edit -->
+                                    <a href="#" class="text-primary me-2" data-bs-toggle="modal"
                                         data-bs-target="#updateBarang{{ $barang['id'] }}" title="Edit">
                                         <i class="ph-pencil"></i>
-                                    </button>
+                                    </a>
 
-                                    <!-- Tombol Hapus -->
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#deleteBarang{{ $barang['id'] }}" title="Hapus">
-                                        <i class="ph-trash"></i>
-                                    </button>
+                                    <!-- Delete -->
+                                    <form action="{{ route('barangs.destroy', $barang['id']) }}" method="POST"
+                                        onsubmit="return confirm('Yakin ingin menghapus?')" class="d-inline me-2">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-link p-0 text-danger" title="Hapus">
+                                            <i class="ph-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
+
                         </tr>
                     @endforeach
                 </tbody>
@@ -107,7 +115,7 @@
                             <div class="col-md-6 text-center">
                                 <p class="fw-bold">QR Code</p>
                                 @php
-                                    $qrCodeBaseUrl = 'http://127.0.0.1:8000/storage/qr_code/';
+                                    $qrCodeBaseUrl = 'http://127.0.0.1:8090/storage/qr_code/';
                                     $qrCodeFormats = ['png', 'jpg', 'jpeg'];
                                     $qrCodeUrl = null;
                                     foreach ($qrCodeFormats as $format) {
@@ -149,8 +157,8 @@
                             <div class="col-md-8">{{ $barang['jenisBarang'] ?? '-' }}</div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-4 fw-bold">Satuan:</div>
-                            <div class="col-md-8">{{ $barang['satuan'] ?? '-' }}</div>
+                            <div class="col-md-4 fw-bold">barang:</div>
+                            <div class="col-md-8">{{ $barang['barang'] ?? '-' }}</div>
                         </div>
 
                         <!-- Bagian Gudang -->
@@ -229,12 +237,12 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Satuan</label>
-                                <select name="satuan_id" class="form-select">
-                                    @foreach ($satuans as $satuan)
-                                        <option value="{{ $satuan['id'] }}"
-                                            {{ isset($barang['satuan']) && $barang['satuan']['id'] == $satuan['id'] ? 'selected' : '' }}>
-                                            {{ $satuan['name'] }}
+                                <label class="form-label">barang</label>
+                                <select name="barang_id" class="form-select">
+                                    @foreach ($barangs as $barang)
+                                        <option value="{{ $barang['id'] }}"
+                                            {{ isset($barang['barang']) && $barang['barang']['id'] == $barang['id'] ? 'selected' : '' }}>
+                                            {{ $barang['name'] }}
                                         </option>
                                     @endforeach
                                 </select>
