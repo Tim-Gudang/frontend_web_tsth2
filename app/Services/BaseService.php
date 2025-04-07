@@ -2,18 +2,19 @@
 
 namespace App\Services;
 
-use App\Http\Constant\ApiConstant;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Auth;
 
 class BaseService
 {
     protected $apiBaseUrl;
+    protected $authService;
 
-    public function __construct()
+    public function __construct(AuthService $authService = null)
     {
         $this->apiBaseUrl = config('api.base_url');
+        $this->authService = $authService ?? new AuthService();
     }
+
     protected function getHeaders()
     {
         return [
@@ -26,33 +27,74 @@ class BaseService
 
     protected function getAccessToken()
     {
-        if (Auth::check() && Auth::user()->token()) {
-            return Auth::user()->token()->accessToken;
+        $token = $this->authService->getAccessToken();
+        
+        if (!$token) {
+            throw new \Exception('No valid access token available. Please login again.');
         }
-
-        throw new \Exception('No valid access token available');
+        
+        return $token;
     }
 
     protected function handleResponse($response)
     {
+        if ($response->status() === 401) {
+            // Token likely expired
+            session()->forget(['user', 'token']);
+            throw new \Exception('Session expired. Please login again.');
+        }
+
         if ($response->failed()) {
             $error = $response->json();
-            throw new \Exception($error['message'] ?? 'Request failed', $error['code'] ?? 500);
+            throw new \Exception($error['message'] ?? 'Request failed', $response->status());
         }
 
         return $response->json()['data'] ?? $response->json();
     }
 
-    protected function withOAuthErrorHandling(callable $callback)
+    protected function get($endpoint, $params = [])
     {
         try {
-            return $callback();
-        } catch (\Illuminate\Auth\AuthenticationException $e) {
-            // Handle token expired or invalid
-            if (Auth::check()) {
-                Auth::user()->token()->delete();
-            }
-            throw new \Exception('Session expired. Please login again.');
+            $response = Http::withHeaders($this->getHeaders())
+                ->get("{$this->apiBaseUrl}/{$endpoint}", $params);
+            
+            return $this->handleResponse($response);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    protected function post($endpoint, $data = [])
+    {
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->post("{$this->apiBaseUrl}/{$endpoint}", $data);
+            
+            return $this->handleResponse($response);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    protected function put($endpoint, $data = [])
+    {
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->put("{$this->apiBaseUrl}/{$endpoint}", $data);
+            
+            return $this->handleResponse($response);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    protected function delete($endpoint, $params = [])
+    {
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->delete("{$this->apiBaseUrl}/{$endpoint}", $params);
+            
+            return $this->handleResponse($response);
         } catch (\Exception $e) {
             throw $e;
         }

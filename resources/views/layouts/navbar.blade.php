@@ -40,11 +40,14 @@
                             class="w-32px h-32px rounded-pill" alt="">
                         <span class="status-indicator bg-success"></span>
                     </div>
-                    <span class="d-none d-lg-inline-block mx-lg-2"> {{ session('user')['name'] }}</span>
+                    <!-- Change this line -->
+                    <span class="d-none d-lg-inline-block mx-lg-2">
+                        {{ session('user')['name'] ?? 'Guest' }}
+                    </span>
                 </a>
 
                 <div class="dropdown-menu dropdown-menu-end">
-                    <a href="{{ route('user_profile') }}" class="dropdown-item">
+                    <a href="#" class="dropdown-item">
                         <i class="ph-user-circle me-2"></i>
                         My profile
                     </a>
@@ -53,7 +56,7 @@
                         <i class="ph-sign-out me-2"></i>
                         Logout
                     </button>
-                    <form action="{{ route('auth.logout') }}" method="POST" id="logoutForm" style="display: none;">
+                    <form action="{{ route('logout') }}" method="POST" id="logoutForm" style="display: none;">
                         @csrf
                         <button type="submit" style="display: none;"></button>
                     </form>

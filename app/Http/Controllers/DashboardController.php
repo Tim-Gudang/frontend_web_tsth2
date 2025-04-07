@@ -2,47 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BarangService;
-use App\Services\JenisBarangService;
-use App\Services\SatuanService;
-use App\Services\GudangService;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
-    protected $barangService;
-    protected $jenisBarangService;
-    protected $satuanService;
-    protected $gudangService;
+    protected $authService;
 
-    public function __construct(
-        BarangService $barangService,
-        JenisBarangService $jenisBarangService,
-        SatuanService $satuanService,
-        GudangService $gudangService
-    ) {
-        $this->barangService = $barangService;
-        $this->jenisBarangService = $jenisBarangService;
-        $this->satuanService = $satuanService;
-        $this->gudangService = $gudangService;
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
     }
 
     public function index()
     {
-        try {
-            $counts = [
-                'barangs' => $this->barangService->getCount(),
-                'jenisbarangs' => $this->jenisBarangService->getCount(),
-                'satuans' => $this->satuanService->getCount(),
-                'gudangs' => $this->gudangService->getCount(),
-                // 'users' => $this->userService->getCount(), // Uncomment if needed
-            ];
-
-            return view('frontend.dashboard', $counts);
-        } catch (\Exception $e) {
-            return view('frontend.dashboard')->withErrors([
-                'message' => 'Failed to load dashboard data: ' . $e->getMessage()
-            ]);
+        // Debug the session state when dashboard is accessed
+        Log::info('Dashboard accessed - Token in session: ' . (session()->has('token') ? 'YES' : 'NO'));
+        
+        // Check if user is authenticated
+        if (!$this->authService->check()) {
+            Log::warning('Dashboard accessed without auth, redirecting to login');
+            return redirect()->route('login');
         }
+        
+        $user = $this->authService->getAuthenticatedUser();
+        Log::info('User authenticated, displaying dashboard');
+        
+        return view('frontend.dashboard', compact('user'));
     }
 }

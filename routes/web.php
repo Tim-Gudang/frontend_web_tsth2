@@ -4,38 +4,38 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SatuanController;
+use App\Http\Controllers\GudangController;
+use App\Http\Controllers\TransactionTypeController;
 use Illuminate\Support\Facades\Route;
 
-// Public routes (accessible without authentication)
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login');
-    Route::post('/login', [AuthController::class, 'handleLogin'])->name('login.post');
+Route::get('/', function () {
+    return redirect()->route('login');
 });
+// Public routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 
-// Authenticated routes
-Route::middleware(['auth:web'])->group(function () {
-
-    // Authentication routes
-    Route::post('/logout', [AuthController::class, 'handleLogout'])->name('logout');
-
-    // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Scan result
-    Route::get('/scan-result', function () {
-        $data = request()->query('data');
-        return view('scan-result', compact('data'));
-    })->name('scan.result');
-
-    // User profile
-    Route::get('/user_profile', function () {
-        return view('profile.user_profile');
-    })->name('user.profile');
-
+// Protected routes - Use middleware group
+Route::middleware(['auth.api'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // Resource controllers
     Route::resource('barangs', BarangController::class);
     Route::resource('satuans', SatuanController::class);
+    Route::resource('transaction-types', TransactionTypeController::class)->except(['show']);
+
+    // Additional TransactionType routes if needed
+    Route::prefix('transaction-types')->group(function () {
+        Route::get('/export', [TransactionTypeController::class, 'export'])->name('transaction-types.export');
+        Route::post('/import', [TransactionTypeController::class, 'import'])->name('transaction-types.import');
+    });
+
+    Route::resource('gudangs', GudangController::class);
+    Route::post('gudangs/{id}/restore', [GudangController::class, 'restore'])->name('gudangs.restore');
+    Route::delete('gudangs/{id}/force', [GudangController::class, 'forceDelete'])->name('gudangs.force-delete');
 });
+
+// Logout route (accessible regardless of auth status)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Fallback route
 Route::fallback(function () {
     return view('error.error');
