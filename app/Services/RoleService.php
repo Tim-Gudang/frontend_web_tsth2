@@ -20,7 +20,7 @@ class RoleService
         return Http::withToken($this->token);
     }
 
-    public function getAllRoles()
+    public function getAllRuoles()
     {
         return $this->withToken()->get("{$this->apiBaseUrl}/roles");
     }

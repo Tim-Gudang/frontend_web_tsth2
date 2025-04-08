@@ -40,55 +40,33 @@ class UserController extends Controller
     }
 
     public function store(Request $request)
-    {
-        try {
-            $response = $this->userService->createUser($request->only([
-                'name', 'email', 'password', 'password_confirmation', 'roles'
-            ]));
+{
+    try {
+        $data = $request->only([
+            'name', 'email', 'password', 'password_confirmation', 'roles'
+        ]);
 
-            if ($response->successful()) {
-                return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
-            }
+        // debug input dari form
+        // dd($data);
 
-            return back()->withErrors(['message' => 'Gagal menyimpan user.']);
-        } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+        if (!is_array($data['roles'])) {
+            $data['roles'] = [$data['roles']];
         }
-    }
 
-    public function edit($id)
-    {
-        try {
-            $user = $this->userService->getUser($id)->json('data');
-            $roles = $this->roleService->getAllRoles()->json('data');
+        $response = $this->userService->createUser($data);
 
-            return view('frontend.user.edit', compact('user', 'roles'));
-        } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+        if ($response->successful()) {
+            return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
         }
+
+        $responseBody = $response->json();
+        return back()->withErrors([
+            'message' => $responseBody['error'] ?? 'Gagal menyimpan user.'
+        ]);
+    } catch (\Exception $e) {
+        return back()->withErrors(['message' => $e->getMessage()]);
     }
-
-    public function update(Request $request, $id)
-    {
-        try {
-            $data = $request->only(['name', 'email', 'roles']);
-
-            if ($request->filled('password')) {
-                $data['password'] = $request->input('password');
-                $data['password_confirmation'] = $request->input('password_confirmation');
-            }
-
-            $response = $this->userService->updateUser($id, $data);
-
-            if ($response->successful()) {
-                return redirect()->route('users.index')->with('success', 'User berhasil diperbarui!');
-            }
-
-            return back()->withErrors(['message' => 'Gagal memperbarui user.']);
-        } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
-        }
-    }
+}
 
     public function destroy($id)
     {

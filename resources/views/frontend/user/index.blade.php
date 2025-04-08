@@ -36,12 +36,13 @@
                     </div>
                     <div class="mb-3">
                         <label>Role</label>
-                        <select name="roles" class="form-control" required>
+                        <select name="roles[]" class="form-control" required>
                             @foreach ($roles as $role)
-                                <option value="{{ $role['id'] }}">{{ $role['name'] }}</option>
+                                <option value="{{ $role['name'] }}">{{ $role['name'] }}</option>
                             @endforeach
                         </select>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -77,7 +78,6 @@
                     <td>
                         <!-- Tombol Aksi -->
                         <a href="#" data-bs-toggle="modal" data-bs-target="#modal_show_{{ $user['id'] }}"><i class="ph-eye text-info"></i></a>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#modal_edit_{{ $user['id'] }}"><i class="ph-pen text-primary ms-2"></i></a>
                         <form action="{{ route('users.destroy', $user['id']) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus user?')">
                             @csrf
                             @method('DELETE')
