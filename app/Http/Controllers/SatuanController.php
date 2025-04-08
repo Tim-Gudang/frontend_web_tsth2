@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use GuzzleHttp\Client;
+use App\Services\SatuanService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class SatuanController extends Controller
 {
-    private $apiBaseUrl;
+    protected $satuanService;
 
-    public function __construct()
+    public function __construct(SatuanService $satuanService)
     {
-        $this->apiBaseUrl = config('api.base_url');
+        $this->satuanService = $satuanService;
     }
 
     public function index()
@@ -23,20 +23,16 @@ class SatuanController extends Controller
                 return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
             }
 
-            $client = new Client();
-            $response = $client->get("{$this->apiBaseUrl}/satuans", [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                    'Accept' => 'application/json',
-                ],
-            ]);
-
-            $satuans = json_decode($response->getBody(), true)['data'] ?? [];
-
+            $satuans = $this->satuanService->getAll();
             return view('frontend.satuan.index', compact('satuans'));
         } catch (\Exception $e) {
-            return view('error.error', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    public function create()
+    {
+        return view('frontend.satuan.create');
     }
 
     public function store(Request $request)
@@ -47,88 +43,13 @@ class SatuanController extends Controller
                 return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
             }
 
-            $payload = $request->only('name', 'description');
-
-            $response = Http::withToken($token)
-                ->post("{$this->apiBaseUrl}/satuans", $payload);
-
-            if ($response->successful()) {
-                return redirect()->route('satuans.index')->with('success', 'Berhasil menambahkan satuan!');
-            }
-
-            // Tambahin ini buat lihat respon error dari API-nya
-            dd([
-                'status' => $response->status(),
-                'body' => $response->body(),
-                'payload' => $payload
-            ]);
-
-            return back()->withErrors(['message' => 'Gagal menyimpan satuan.']);
+            $satuan = $this->satuanService->create($request->only('name', 'description'));
+            return redirect()->route('satuans.index')
+                ->with('success', 'Satuan berhasil dibuat');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
-        }
-    }
-
-
-    public function edit($id)
-    {
-        try {
-            $token = session('token');
-            if (!$token) {
-                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
-            }
-
-            $response = Http::withToken($token)->get("{$this->apiBaseUrl}/satuans/{$id}");
-
-            if ($response->successful()) {
-                $satuan = $response->json('data');
-                return view('frontend.satuan.edit', compact('satuan'));
-            }
-
-            return redirect()->route('satuans.index')->withErrors('Data tidak ditemukan.');
-        } catch (\Exception $e) {
-            return back()->withErrors($e->getMessage());
-        }
-    }
-
-    public function update(Request $request, $id)
-    {
-        try {
-            $token = session('token');
-            if (!$token) {
-                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
-            }
-
-            $response = Http::withToken($token)
-                ->put("{$this->apiBaseUrl}/satuans/{$id}", $request->only('name', 'description'));
-
-            if ($response->successful()) {
-                return redirect()->route('satuans.index')->with('success', 'Berhasil memperbarui satuan!');
-            }
-
-            return back()->withErrors(['message' => 'Gagal memperbarui satuan.']);
-        } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
-        }
-    }
-
-    public function destroy($id)
-    {
-        try {
-            $token = session('token');
-            if (!$token) {
-                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
-            }
-
-            $response = Http::withToken($token)->delete("{$this->apiBaseUrl}/satuans/{$id}");
-
-            if ($response->successful()) {
-                return redirect()->route('satuans.index')->with('success', 'Berhasil menghapus satuan!');
-            }
-
-            return back()->withErrors(['message' => 'Gagal menghapus satuan.']);
-        } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
@@ -140,16 +61,102 @@ class SatuanController extends Controller
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
 
-            $response = Http::withToken($token)
-                ->get("{$this->apiBaseUrl}/satuans/{$id}");
-
-            if ($response->successful()) {
-                return response()->json($response->json());
+            $satuan = $this->satuanService->getById($id);
+            if (!$satuan) {
+                return response()->json(['message' => 'Satuan tidak ditemukan'], 404);
             }
-
-            return response()->json(['message' => 'Data tidak ditemukan'], $response->status());
+            return response()->json(['data' => $satuan]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function edit($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $satuan = $this->satuanService->getById($id);
+            if (!$satuan) {
+                return redirect()->route('satuans.index')
+                    ->with('error', 'Satuan tidak ditemukan');
+            }
+            return view('frontend.satuan.edit', compact('satuan'));
+        } catch (\Exception $e) {
+            return redirect()->route('satuans.index')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $this->satuanService->update($id, $request->only('name', 'description'));
+            return redirect()->route('satuans.index')
+                ->with('success', 'Satuan berhasil diperbarui');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $this->satuanService->delete($id);
+            return redirect()->route('satuans.index')
+                ->with('success', 'Satuan berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->route('satuans.index')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $this->satuanService->restore($id);
+            return redirect()->route('satuans.index')
+                ->with('success', 'Satuan berhasil dipulihkan');
+        } catch (\Exception $e) {
+            return redirect()->route('satuans.index')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function forceDelete($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $this->satuanService->forceDelete($id);
+            return redirect()->route('satuans.index')
+                ->with('success', 'Satuan berhasil dihapus permanen');
+        } catch (\Exception $e) {
+            return redirect()->route('satuans.index')
+                ->with('error', $e->getMessage());
         }
     }
 }

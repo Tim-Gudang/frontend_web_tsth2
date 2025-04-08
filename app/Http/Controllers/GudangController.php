@@ -18,8 +18,10 @@ class GudangController extends Controller
     public function index()
     {
         try {
+            $token = session('token');
+
             $gudangs = $this->gudangService->getAll();
-            return view('gudangs.index', compact('gudangs'));
+            return view('frontend.gudang.index', compact('gudangs'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -53,7 +55,7 @@ class GudangController extends Controller
             }
             return view('gudangs.show', compact('gudang'));
         } catch (\Exception $e) {
-            return redirect()->route('gudangs.index')
+            return redirect()->route('gudang.index')
                 ->with('error', $e->getMessage());
         }
     }
@@ -68,7 +70,7 @@ class GudangController extends Controller
             }
             return view('gudangs.edit', compact('gudang'));
         } catch (\Exception $e) {
-            return redirect()->route('gudangs.index')
+            return redirect()->route('gudang.index')
                 ->with('error', $e->getMessage());
         }
     }

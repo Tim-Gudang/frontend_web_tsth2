@@ -6,12 +6,6 @@ use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Services\RoleService;
 
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use App\Services\UserService;
-use App\Services\RoleService;
-
 class UserController extends Controller
 {
     protected $userService;
@@ -40,20 +34,11 @@ class UserController extends Controller
     }
 
     public function store(Request $request)
-{
-    try {
-        $data = $request->only([
-            'name', 'email', 'password', 'password_confirmation', 'roles'
-        ]);
-
-        // debug input dari form
-        // dd($data);
-
-        if (!is_array($data['roles'])) {
-            $data['roles'] = [$data['roles']];
-        }
-
-        $response = $this->userService->createUser($data);
+    {
+        try {
+            $response = $this->userService->createUser($request->only([
+                'name', 'email', 'password', 'password_confirmation', 'roles'
+            ]));
 
         if ($response->successful()) {
             return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');

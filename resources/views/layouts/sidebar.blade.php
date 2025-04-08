@@ -51,13 +51,12 @@
                         <li class="nav-item"><a href="{{ route('barangs.index') }}" class="nav-link active">Barang</a>
                         </li>
                         <li class="nav-item"><a href="{{ route('satuans.index') }}" class="nav-link">Satuan</a></li>
-                        <li class="nav-item"><a href="../../layout_3/full/index.html" class="nav-link">Jenis Barang</a>
+                        <li class="nav-item"><a href="{{route('jenis-barangs.index')}}" class="nav-link">Jenis Barang</a>
                         </li>
-                        <li class="nav-item"><a href="../../layout_4/full/index.html" class="nav-link">Kategori</a></li>
-                        <li class="nav-item"><a href="../../layout_5/full/index.html" class="nav-link">Gudang</a></li>
-                        <li class="nav-item"><a href="../../layout_6/full/index.html" class="nav-link">Jenis
+                        <li class="nav-item"><a href="{{ route('barang-categories.index') }}" class="nav-link">Kategori</a></li>
+                        <li class="nav-item"><a href="{{ route('gudangs.index') }}" class="nav-link">Gudang</a></li>
+                        <li class="nav-item"><a href="{{route('transaction-types.index')}}" class="nav-link">Jenis
                                 Trasanksi</a></li>
-                        <li class="nav-item"><a href="../../layout_7/full/index.html" class="nav-link">Status</a></li>
                     </ul>
                 </li>
                 <li class="nav-item nav-item-submenu">

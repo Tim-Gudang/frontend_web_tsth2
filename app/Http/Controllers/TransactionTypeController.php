@@ -19,23 +19,18 @@ class TransactionTypeController extends Controller
     {
         try {
             $transactionTypes = $this->transactionTypeService->getAll();
-            return view('transaction-types.index', compact('transactionTypes'));
+            return view('frontend.transaksi_tipe.index', compact('transactionTypes'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
-    public function create()
-    {
-        return view('transaction-types.create');
-    }
-
     public function store(Request $request)
     {
         try {
-            $transactionType = $this->transactionTypeService->create($request->all());
-            return redirect()->route('transaction-types.index')
-                ->with('success', 'Transaction type created successfully');
+            $this->transactionTypeService->create($request->all());
+            return redirect()->route('frontend.transaksi_tipe.index')
+                ->with('success', 'Tipe transaksi berhasil dibuat');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
@@ -43,42 +38,12 @@ class TransactionTypeController extends Controller
         }
     }
 
-    public function show($id)
-    {
-        try {
-            $transactionType = $this->transactionTypeService->getById($id);
-            if (!$transactionType) {
-                return redirect()->route('transaction-types.index')
-                    ->with('error', 'Transaction type not found');
-            }
-            return view('transaction-types.show', compact('transactionType'));
-        } catch (\Exception $e) {
-            return redirect()->route('transaction-types.index')
-                ->with('error', $e->getMessage());
-        }
-    }
-
-    public function edit($id)
-    {
-        try {
-            $transactionType = $this->transactionTypeService->getById($id);
-            if (!$transactionType) {
-                return redirect()->route('transaction-types.index')
-                    ->with('error', 'Transaction type not found');
-            }
-            return view('transaction-types.edit', compact('transactionType'));
-        } catch (\Exception $e) {
-            return redirect()->route('transaction-types.index')
-                ->with('error', $e->getMessage());
-        }
-    }
-
     public function update(Request $request, $id)
     {
         try {
-            $transactionType = $this->transactionTypeService->update($id, $request->all());
-            return redirect()->route('transaction-types.index')
-                ->with('success', 'Transaction type updated successfully');
+            $this->transactionTypeService->update($id, $request->all());
+            return redirect()->route('frontend.transaksi_tipe.index')
+                ->with('success', 'Tipe transaksi berhasil diperbarui');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
@@ -90,10 +55,22 @@ class TransactionTypeController extends Controller
     {
         try {
             $this->transactionTypeService->delete($id);
-            return redirect()->route('transaction-types.index')
-                ->with('success', 'Transaction type deleted successfully');
+            return redirect()->route('frontend.transaksi_tipe.index')
+                ->with('success', 'Tipe transaksi berhasil dihapus');
         } catch (\Exception $e) {
-            return redirect()->route('transaction-types.index')
+            return redirect()->route('frontend.transaksi_tipe.index')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $this->transactionTypeService->restore($id);
+            return redirect()->route('frontend.transaksi_tipe.index')
+                ->with('success', 'Tipe transaksi berhasil dipulihkan');
+        } catch (\Exception $e) {
+            return redirect()->route('frontend.transaksi_tipe.index')
                 ->with('error', $e->getMessage());
         }
     }

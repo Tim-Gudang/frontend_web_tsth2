@@ -2,48 +2,49 @@
 
 namespace App\Repositories;
 
-use App\Models\Satuan;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\Satuan; // Asumsi ada model Satuan
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class SatuanRepository
 {
-    public function getAll()
+    public function getAll(int $perPage = 10): LengthAwarePaginator
     {
-        return Satuan::with('user')->get();
+        return Satuan::paginate($perPage);
     }
 
-    public function findById($id)
+    public function findById(int $id): ?Satuan
     {
         return Satuan::find($id);
     }
 
-    public function findTrashedById($id)
-    {
-        return Satuan::onlyTrashed()->find($id);
-    }
-
-    public function create(array $data)
+    public function create(array $data): Satuan
     {
         return Satuan::create($data);
     }
 
-    public function update(Satuan $satuan, array $data)
+    public function update(Satuan $satuan, array $data): bool
     {
         return $satuan->update($data);
     }
 
-    public function delete(Satuan $satuan)
+    public function delete(Satuan $satuan): bool
     {
         return $satuan->delete();
     }
 
-    public function restore(Satuan $satuan)
+    public function restore(int $id): ?Satuan
     {
-        return $satuan->restore();
+        $satuan = Satuan::onlyTrashed()->find($id);
+        if ($satuan) {
+            $satuan->restore();
+            return $satuan;
+        }
+        return null;
     }
 
-    public function forceDelete(Satuan $satuan)
+    public function forceDelete(int $id): bool
     {
-        return $satuan->forceDelete();
+        $satuan = Satuan::onlyTrashed()->find($id);
+        return $satuan ? $satuan->forceDelete() : false;
     }
 }

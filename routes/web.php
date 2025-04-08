@@ -7,8 +7,10 @@ use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\GudangController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TransactionTypeController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\BarangCategoryController;
+use App\Http\Controllers\JenisBarangController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -26,8 +28,13 @@ Route::middleware(['auth.api'])->group(function () {
     Route::resource('transaction-types', TransactionTypeController::class)->except(['show']);
     Route::resource('roles', RoleController::class);
     Route::resource('users', UserController::class);
+    Route::resource('jenis-barangs', JenisBarangController::class);
 
 
+
+    Route::resource('barang-categories', BarangCategoryController::class); // Fixed: Use resource routing
+
+    Route::post('barangs/{id}/restore', [BarangController::class, 'restore'])->name('barangs.restore');
     // Additional TransactionType routes if needed
     Route::prefix('transaction-types')->group(function () {
         Route::get('/export', [TransactionTypeController::class, 'export'])->name('transaction-types.export');
