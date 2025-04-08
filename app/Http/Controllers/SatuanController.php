@@ -39,7 +39,59 @@ class SatuanController extends Controller
         }
     }
 
-    public function create(Request $request)
+    public function store(Request $request)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $payload = $request->only('name', 'description');
+
+            $response = Http::withToken($token)
+                ->post("{$this->apiBaseUrl}/satuans", $payload);
+
+            if ($response->successful()) {
+                return redirect()->route('satuans.index')->with('success', 'Berhasil menambahkan satuan!');
+            }
+
+            // Tambahin ini buat lihat respon error dari API-nya
+            dd([
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'payload' => $payload
+            ]);
+
+            return back()->withErrors(['message' => 'Gagal menyimpan satuan.']);
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
+        }
+    }
+
+
+    public function edit($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $response = Http::withToken($token)->get("{$this->apiBaseUrl}/satuans/{$id}");
+
+            if ($response->successful()) {
+                $satuan = $response->json('data');
+                return view('frontend.satuan.edit', compact('satuan'));
+            }
+
+            return redirect()->route('satuans.index')->withErrors('Data tidak ditemukan.');
+        } catch (\Exception $e) {
+            return back()->withErrors($e->getMessage());
+        }
+    }
+
+    public function update(Request $request, $id)
     {
         try {
             $token = session('token');
@@ -48,98 +100,56 @@ class SatuanController extends Controller
             }
 
             $response = Http::withToken($token)
-                ->post("{$this->apiBaseUrl}/satuans", $request->only('name', 'description'));
+                ->put("{$this->apiBaseUrl}/satuans/{$id}", $request->only('name', 'description'));
 
             if ($response->successful()) {
-                return redirect()->route('satuans.index')->with('success', 'Berhasil menambahkan satuan!');
+                return redirect()->route('satuans.index')->with('success', 'Berhasil memperbarui satuan!');
             }
 
-            return back()->withErrors(['message' => 'Gagal menyimpan satuan.']);
+            return back()->withErrors(['message' => 'Gagal memperbarui satuan.']);
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);
         }
     }
-    public function edit($id)
-{
-    try {
-        $token = session('token');
-        if (!$token) {
-            return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+
+    public function destroy($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+            }
+
+            $response = Http::withToken($token)->delete("{$this->apiBaseUrl}/satuans/{$id}");
+
+            if ($response->successful()) {
+                return redirect()->route('satuans.index')->with('success', 'Berhasil menghapus satuan!');
+            }
+
+            return back()->withErrors(['message' => 'Gagal menghapus satuan.']);
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
         }
-
-        $response = Http::withToken($token)->get("{$this->apiBaseUrl}/satuans/{$id}");
-
-        if ($response->successful()) {
-            $satuan = $response->json('data');
-            return view('frontend.satuan.edit', compact('satuan'));
-        }
-
-        return redirect()->route('satuans.index')->withErrors('Data tidak ditemukan.');
-    } catch (\Exception $e) {
-        return back()->withErrors($e->getMessage());
     }
-}
 
-public function update(Request $request, $id)
-{
-    try {
-        $token = session('token');
-        if (!$token) {
-            return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
+    public function show($id)
+    {
+        try {
+            $token = session('token');
+            if (!$token) {
+                return response()->json(['message' => 'Unauthenticated'], 401);
+            }
+
+            $response = Http::withToken($token)
+                ->get("{$this->apiBaseUrl}/satuans/{$id}");
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            return response()->json(['message' => 'Data tidak ditemukan'], $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
-
-        $response = Http::withToken($token)
-            ->put("{$this->apiBaseUrl}/satuans/{$id}", $request->only('name', 'description'));
-
-        if ($response->successful()) {
-            return redirect()->route('satuans.index')->with('success', 'Berhasil memperbarui satuan!');
-        }
-
-        return back()->withErrors(['message' => 'Gagal memperbarui satuan.']);
-    } catch (\Exception $e) {
-        return back()->withErrors(['message' => $e->getMessage()]);
     }
-}
-
-
-public function destroy($id)
-{
-    try {
-        $token = session('token');
-        if (!$token) {
-            return redirect()->route('login')->withErrors('Anda perlu login terlebih dahulu.');
-        }
-
-        $response = Http::withToken($token)->delete("{$this->apiBaseUrl}/satuans/{$id}");
-
-        if ($response->successful()) {
-            return redirect()->route('satuans.index')->with('success', 'Berhasil menghapus satuan!');
-        }
-
-        return back()->withErrors(['message' => 'Gagal menghapus satuan.']);
-    } catch (\Exception $e) {
-        return back()->withErrors(['message' => $e->getMessage()]);
-    }
-}
-public function show($id)
-{
-    try {
-        $token = session('token');
-        if (!$token) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
-        }
-
-        $response = Http::withToken($token)
-            ->get("{$this->apiBaseUrl}/satuans/{$id}");
-
-        if ($response->successful()) {
-            return response()->json($response->json());
-        }
-
-        return response()->json(['message' => 'Data tidak ditemukan'], $response->status());
-    } catch (\Exception $e) {
-        return response()->json(['message' => $e->getMessage()], 500);
-    }
-}
-
 }

@@ -5,7 +5,9 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\GudangController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TransactionTypeController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,6 +24,9 @@ Route::middleware(['auth.api'])->group(function () {
     Route::resource('barangs', BarangController::class);
     Route::resource('satuans', SatuanController::class);
     Route::resource('transaction-types', TransactionTypeController::class)->except(['show']);
+    Route::resource('roles', RoleController::class);
+    Route::resource('users', UserController::class);
+
 
     // Additional TransactionType routes if needed
     Route::prefix('transaction-types')->group(function () {
