@@ -10,7 +10,6 @@ use App\Http\Controllers\TransactionTypeController;
 use App\Http\Controllers\BarangCategoryController;
 use App\Http\Controllers\JenisBarangController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
@@ -28,9 +27,9 @@ Route::middleware(['auth.api'])->group(function () {
     Route::resource('satuans', SatuanController::class);
     Route::resource('transaction-types', TransactionTypeController::class)->except(['show']);
     Route::resource('roles', RoleController::class);
-    Route::resource('users', UserController::class); 
-    Route::resource('jenis-barangs', JenisBarangController::class);    
-   
+    Route::resource('users', UserController::class);
+    Route::resource('jenis-barangs', JenisBarangController::class);
+
 
 
     Route::resource('barang-categories', BarangCategoryController::class); // Fixed: Use resource routing
