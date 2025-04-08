@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('content')
-<!-- Tampilkan pesan error -->
+<!-- Error and success messages -->
 @if ($errors->any())
 <div class="alert alert-danger">
     <ul class="mb-0">
@@ -23,25 +23,25 @@
     {{ session('success') }}
 </div>
 @endif
-<!-- Modal Tambah -->
 
+<!-- Create Modal -->
 <div id="modal_centered" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">Tambah Data</h6>
+                    <h6 class="mb-0">Tambah Kategori Barang</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('satuans.store') }}" method="POST">
+                    <form action="{{ route('barang-categories.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
-                            <label class="form-label">Nama Satuan:</label>
-                            <input type="text" name="name" class="form-control" placeholder="Nama Satuan" required>
+                            <label class="form-label">Nama Kategori:</label>
+                            <input type="text" name="name" class="form-control" placeholder="Nama Kategori" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Deskripsi:</label>
-                            <textarea name="description" rows="3" class="form-control" placeholder="null"></textarea>
+                            <label class="form-label">Slug:</label>
+                            <input type="text" name="slug" class="form-control" placeholder="Slug (opsional)">
                         </div>
                         <div class="d-flex align-items-center">
                             <button type="reset" class="btn btn-light">Batal</button>
@@ -64,44 +64,51 @@
     </span> Tambah
 </button>
 
-<!-- Table Satuan -->
+<!-- Table -->
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0">Table Satuan</h5>
+        <h5 class="mb-0">Daftar Kategori Barang</h5>
     </div>
     <table class="table datatable-button-html5-basic">
         <thead>
             <tr>
                 <th>No</th>
-                <th>Nama Satuan</th>
-                <th>Deskripsi</th>
+                <th>Nama Kategori</th>
+                <th>Slug</th>
                 <th>Status</th>
+                <th>Dibuat</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($satuans as $key => $satuan)
+            @foreach ($barangCategories as $key => $category)
             <tr>
                 <td>{{ $key + 1 }}</td>
-                <td>{{ $satuan['name'] }}</td>
-                <td>{{ $satuan['description'] ?? '-' }}</td>
-                <td><span class="badge bg-success bg-opacity-10 text-success">Active</span></td>
+                <td>{{ $category['name'] }}</td>
+                <td>{{ $category['slug'] ?? '-' }}</td>
+                <td>
+                    <span class="badge {{ $category['deleted_at'] ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success' }}">
+                        {{ $category['deleted_at'] ? 'Deleted' : 'Active' }}
+                    </span>
+                </td>
+                <td>{{ $category['created_at'] ?? '-' }}</td>
                 <td>
                     <div class="d-inline-flex">
                         <!-- Show -->
                         <a href="#" class="text-info me-2" data-bs-toggle="modal"
-                            data-bs-target="#modal_show_{{ $satuan['id'] }}">
+                            data-bs-target="#modal_show_{{ $category['id'] }}">
                             <i class="ph-eye"></i>
                         </a>
 
                         <!-- Edit -->
                         <a href="#" class="text-primary me-2" data-bs-toggle="modal"
-                            data-bs-target="#modal_edit_{{ $satuan['id'] }}">
+                            data-bs-target="#modal_edit_{{ $category['id'] }}">
                             <i class="ph-pen"></i>
                         </a>
 
                         <!-- Delete -->
-                        <form action="{{ route('satuans.destroy', $satuan['id']) }}" method="POST"
+                        @if (!$category['deleted_at'])
+                        <form action="{{ route('barang-categories.destroy', $category['id']) }}" method="POST"
                             onsubmit="return confirm('Yakin ingin menghapus?')" class="d-inline me-2">
                             @csrf
                             @method('DELETE')
@@ -109,6 +116,18 @@
                                 <i class="ph-trash"></i>
                             </button>
                         </form>
+                        @endif
+
+                        <!-- Restore -->
+                        @if ($category['deleted_at'])
+                        <form action="{{ route('barang-categories.restore', $category['id']) }}" method="POST"
+                            onsubmit="return confirm('Yakin ingin memulihkan?')" class="d-inline me-2">
+                            @csrf
+                            <button type="submit" class="btn btn-link p-0 text-success">
+                                <i class="ph-arrow-counter-clockwise"></i>
+                            </button>
+                        </form>
+                        @endif
                     </div>
                 </td>
             </tr>
@@ -117,27 +136,26 @@
     </table>
 </div>
 
-<!-- Modal Edit per Item -->
-@foreach ($satuans as $satuan)
-<div id="modal_edit_{{ $satuan['id'] }}" class="modal fade" tabindex="-1">
+<!-- Edit Modals -->
+@foreach ($barangCategories as $category)
+<div id="modal_edit_{{ $category['id'] }}" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">Edit Data</h6>
+                    <h6 class="mb-0">Edit Kategori Barang</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('satuans.update', $satuan['id']) }}" method="POST">
+                    <form action="{{ route('barang-categories.update', $category['id']) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
-                            <label class="form-label">Nama Satuan:</label>
-                            <input type="text" name="name" value="{{ $satuan['name'] }}" class="form-control" required>
+                            <label class="form-label">Nama Kategori:</label>
+                            <input type="text" name="name" value="{{ $category['name'] }}" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Deskripsi:</label>
-                            <textarea name="description" rows="3"
-                                class="form-control">{{ $satuan['description'] }}</textarea>
+                            <label class="form-label">Slug:</label>
+                            <input type="text" name="slug" value="{{ $category['slug'] }}" class="form-control">
                         </div>
                         <div class="d-flex align-items-center">
                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
@@ -153,27 +171,38 @@
 </div>
 @endforeach
 
-<!-- Modal Show per Item -->
-@foreach ($satuans as $satuan)
-<div id="modal_show_{{ $satuan['id'] }}" class="modal fade" tabindex="-1">
+<!-- Show Modals -->
+@foreach ($barangCategories as $category)
+<div id="modal_show_{{ $category['id'] }}" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
             <div class="card">
                 <div class="card-header bg-info text-white">
-                    <h6 class="mb-0">Detail Satuan</h6>
+                    <h6 class="mb-0">Detail Kategori Barang</h6>
                 </div>
                 <div class="card-body">
                     <dl class="row">
-                        <dt class="col-sm-4">Nama Satuan:</dt>
-                        <dd class="col-sm-8">{{ $satuan['name'] }}</dd>
+                        <dt class="col-sm-4">Nama Kategori:</dt>
+                        <dd class="col-sm-8">{{ $category['name'] }}</dd>
 
-                        <dt class="col-sm-4">Deskripsi:</dt>
-                        <dd class="col-sm-8">{{ $satuan['description'] ?? '-' }}</dd>
+                        <dt class="col-sm-4">Slug:</dt>
+                        <dd class="col-sm-8">{{ $category['slug'] ?? '-' }}</dd>
 
                         <dt class="col-sm-4">Status:</dt>
                         <dd class="col-sm-8">
-                            <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                            <span class="badge {{ $category['deleted_at'] ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success' }}">
+                                {{ $category['deleted_at'] ? 'Deleted' : 'Active' }}
+                            </span>
                         </dd>
+
+                        <dt class="col-sm-4">Dibuat:</dt>
+                        <dd class="col-sm-8">{{ $category['created_at'] ?? '-' }}</dd>
+
+                        <dt class="col-sm-4">Diperbarui:</dt>
+                        <dd class="col-sm-8">{{ $category['updated_at'] ?? '-' }}</dd>
+
+                        <dt class="col-sm-4">Dihapus:</dt>
+                        <dd class="col-sm-8">{{ $category['deleted_at'] ?? '-' }}</dd>
                     </dl>
 
                     <div class="d-flex justify-content-end">

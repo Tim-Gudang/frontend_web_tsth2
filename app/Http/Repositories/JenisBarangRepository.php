@@ -2,22 +2,22 @@
 
 namespace App\Repositories;
 
-use App\Models\JenisBarang;
+use App\Models\JenisBarang; // Asumsi ada model JenisBarang
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class JenisBarangRepository
 {
-    public function getAll(): LengthAwarePaginator
+    public function getAll(int $perPage = 10): LengthAwarePaginator
     {
-        return JenisBarang::with('user')->paginate(10);
+        return JenisBarang::paginate($perPage);
     }
 
-    public function getById($id): ?JenisBarang
+    public function getById(int $id): ?JenisBarang
     {
         return JenisBarang::find($id);
     }
 
-    public function getTrashedById($id): ?JenisBarang
+    public function getTrashedById(int $id): ?JenisBarang
     {
         return JenisBarang::onlyTrashed()->find($id);
     }

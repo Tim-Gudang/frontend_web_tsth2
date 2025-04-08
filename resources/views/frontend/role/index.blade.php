@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3e00139 (rivael)
 @extends('layouts.main')
 
 @section('content')

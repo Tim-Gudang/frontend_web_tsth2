@@ -28,7 +28,8 @@
     <script src="{{ asset('template/assets/js/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('template/assets/js/vendor/tables/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('template/assets/js/vendor/tables/datatables/extensions/pdfmake/pdfmake.min.js') }}"></script>
-    <script src="{{ asset('template/assets/js/vendor/tables/datatables/extensions/pdfmake/vfs_fonts.min.js') }}"></script>
+    <script src="{{ asset('template/assets/js/vendor/tables/datatables/extensions/pdfmake/vfs_fonts.min.js') }}">
+    </script>
     <script src="{{ asset('template/assets/js/vendor/tables/datatables/extensions/buttons.min.js') }}"></script>
     <script src="{{ asset('template/assets/demo/pages/datatables_extension_buttons_html5.js') }}"></script>
 
@@ -55,7 +56,7 @@
     <script src="{{ asset('template/assets/demo/data/dashboard/bullets.json') }}"></script>
     <!-- /theme JS files -->
 
-    {{-- font awesome  --}}
+    {{-- font awesome --}}
     <link href="{{ asset('template/assets/icons/fontawesome/styles.min.css') }}" rel="stylesheet" type="text/css">
 
     @stack('scripts')

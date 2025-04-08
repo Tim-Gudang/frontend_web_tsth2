@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Log;
 class DashboardController extends Controller
 {
     protected $authService;
+    protected $gudangService;
+    protected $transactionTypeService;
+    
 
     public function __construct(AuthService $authService)
     {

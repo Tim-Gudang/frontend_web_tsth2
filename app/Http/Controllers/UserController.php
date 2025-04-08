@@ -43,7 +43,11 @@ class UserController extends Controller
     {
         try {
             $response = $this->userService->createUser($request->only([
-                'name', 'email', 'password', 'password_confirmation', 'roles'
+                'name',
+                'email',
+                'password',
+                'password_confirmation',
+                'roles'
             ]));
 
             if ($response->successful()) {
